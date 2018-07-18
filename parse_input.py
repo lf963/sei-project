@@ -17,7 +17,7 @@ def parse(key_words):
         word_result.append(key_words[start:end])
         start += 1
 
-    # find operator
+    # find & | operator
     start = 0
     while True:
         start = key_words.find(')', start)
