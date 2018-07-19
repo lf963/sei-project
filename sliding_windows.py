@@ -200,8 +200,8 @@ def get_doc(is_doc):
 
     
 
-if __name__ = '__main__'
+if __name__ == '__main__':
 
-t0 = time.time()
-title, num = get_doc(processing(length,is_doc,in_list, out_list))
-print(time.time()-t0)
+    t0 = time.time()
+    title, num = get_doc(processing(length,is_doc,in_list, out_list))
+    print(time.time()-t0)
