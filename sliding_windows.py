@@ -13,6 +13,7 @@ import time
 import csv
 import re
 
+
 def load_data():
     wiki = []
     with open('/Users/garylai/Desktop/wiki2.csv', newline='') as csvfile:
@@ -64,6 +65,17 @@ def in_out_list(check_word):
             in_list.append(all_list[all_.index(i)])
         for i in mi:
             out_list.append(all_list[all_.index(i)])
+        
+    for i in range(len(in_list)):
+        if in_list[i][0] == '(':
+            in_list[i] = list(filter(None, re.split('\W+', in_list[0])))
+            
+    for i in range(len(out_list)):
+        if out_list[i][0] == '(':
+            out_list[i] = list(filter(None, re.split('\W+', out_list[0])))
+            
+            
+            
     return in_list, out_list
         
     
@@ -120,6 +132,7 @@ def processing(length, is_doc, in_list, out_list):
         print(run)
         slide_in_list = []
         slide_out_list = []
+        
         for check in in_list:
             if type(check) == str:
                 slide_in_list.append([m.start() for m in re.finditer(check,wiki[doc][3])])
@@ -127,11 +140,13 @@ def processing(length, is_doc, in_list, out_list):
                 f_word = [m.start() for m in re.finditer(check[0],wiki[doc][3])]
                 s_word = [m.start() for m in re.finditer(check[1],wiki[doc][3])]
                 c_word = []
+                
                 for i in f_word:
                     for j in s_word:
                         if abs(i-j) < check[2]:
                             c_word.append(i)
                 slide_in_list.append(c_word)
+                
         for check in out_list:
             if type(check) == str:
                 slide_out_list.append([m.start() for m in re.finditer(check,wiki[doc][3])])
@@ -190,15 +205,12 @@ def processing(length, is_doc, in_list, out_list):
     return get_docs        
 
 
-
 def get_doc(is_doc):
     title = []
     for i in is_doc:
         title.append(wiki[i][2])
     return title, len(title)
      
-
-    
 
 if __name__ == '__main__':
 
