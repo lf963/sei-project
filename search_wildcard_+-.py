@@ -287,124 +287,124 @@ def main():
             index_pos = []
             for i in result_pos:
                 index_pos.append(i[0])
-            # 輸出
-            # print([slide_window, sorted(list(set(index_pos))), wildcard_pos, wildcard_neg])
-            positive_query_pos = []
-            for data in result_pos:
-                positive_query_pos.append([data[0]])
-                url = data[1]
-                text = data[3]
-                title = data[2]
-                for query in query_term_pos_2:
-                    tmp = []
-                    positive_query_pos[-1].append([])
-                    for i in re.finditer(query, text):
-                        tmp.append(i.start())
-                    positive_query_pos[-1][-1] = sorted(list(set(tmp)))
-                for w_pos in wildcard_pos:
-                    tmp = []
-                    positive_query_pos[-1].append([])
-                    for i in re.finditer(w_pos[0], text):
-                        for j in re.finditer(w_pos[1], text):
-                            if 1 <= (int(j.start()) - int(i.end())) <= w_pos[2]:
-                                tmp.append(int(i.start()))
-                    positive_query_pos[-1][-1] = sorted(list(set(tmp)))
-                positive_query_pos[-1].append(title)
-                positive_query_pos[-1].append(url)
-                positive_query_pos[-1].append(text)
-
-            for i in range(len(positive_query_pos)):
-                tmp = []
-                for j in range(len(positive_query_pos[i]) - 4, 1, -1):
-                    tmp_r = []
-                    tmp_k = []
-                    for r in positive_query_pos[i][j]:
-                        check = False
-                        for k in positive_query_pos[i][j - 1]:
-                            if abs(r - k) <= slide_window:
-                                tmp_r.append(r)
-                                tmp_k.append(k)
-                                check = True
-                            elif check:
-                                break
-                    positive_query_pos[i][j] = list(set(tmp_r))
-                    positive_query_pos[i][j - 1] = list(set(tmp_k))
-
-            final_pos = []
-            for i in positive_query_pos:
-                check = True
-                for j in i[1:]:
-                    if len(j) == 0:
-                        check = False
-                        break
-                if check:
-                    final_pos.append(i)
-
-            for i in final_pos:
-                text = i[-1]
-                neg = []
-                if len(query_term_neg_2) > 0:
-                    for j in query_term_neg_2:
-                        for k in re.finditer(j, text):
-                            neg.append(int(k.start()))
-                if len(wildcard_neg) > 0:
-                    for w_neg in wildcard_neg:
-                        for k in re.finditer(w_neg[0], text):
-                            for j in re.finditer(w_neg[1], text):
-                                if 1 <= (int(j.start()) - int(k.end())) <= w_neg[2]:
-                                    neg.append(int(k.start()))
-
-                tmp = []
-                for r in range(len(i) - 4, 0, -1):
-                    tmp.append(i[r])
-
-                restrict = []
-                for n in neg:
-                    if n - 100 < 0:
-                        for res in range(0, n + 101):
-                            restrict.append(res)
-                    else:
-                        for res in range(n - 100, n + 101):
-                            restrict.append(res)
-
-                restrict = list(set(restrict))
-                counter = -1
-                path = []
-                for r in tmp:
-                    counter += 1
-                    path.append([])
-                    for k in r:
-                        if k not in restrict:
-                            path[counter].append(k)
-
-                check = True
-                for j in path:
-                    if not j:
-                        check = False
-                        break
-
-                if check:
-                    final_result.append(i[-2])
-                    glo_counter += 1
-                    print(glo_counter, i[-3])
-                    # print(neg)
-                    # print(path)
-
-            if len(final_result) > 0:
-                while True:
-                    ask = input('想看那些原始文章(編號): ')
-
-                    if ask == '':
-                        break
-                    else:
-                        ask = ask.split()
-                        for i in ask:
-                            if int(i) > len(final_result):
-                                print('編號錯誤，請重新輸入。')
-                                break
-                            print(getArticles(final_result[int(i) - 1]))
-            else:
-                print('沒有符合條件的結果。')
+            # 輸出給sliding window
+            print([slide_window, sorted(list(set(index_pos))), wildcard_pos, wildcard_neg])
+            # positive_query_pos = []
+            # for data in result_pos:
+            #     positive_query_pos.append([data[0]])
+            #     url = data[1]
+            #     text = data[3]
+            #     title = data[2]
+            #     for query in query_term_pos_2:
+            #         tmp = []
+            #         positive_query_pos[-1].append([])
+            #         for i in re.finditer(query, text):
+            #             tmp.append(i.start())
+            #         positive_query_pos[-1][-1] = sorted(list(set(tmp)))
+            #     for w_pos in wildcard_pos:
+            #         tmp = []
+            #         positive_query_pos[-1].append([])
+            #         for i in re.finditer(w_pos[0], text):
+            #             for j in re.finditer(w_pos[1], text):
+            #                 if 1 <= (int(j.start()) - int(i.end())) <= w_pos[2]:
+            #                     tmp.append(int(i.start()))
+            #         positive_query_pos[-1][-1] = sorted(list(set(tmp)))
+            #     positive_query_pos[-1].append(title)
+            #     positive_query_pos[-1].append(url)
+            #     positive_query_pos[-1].append(text)
+            #
+            # for i in range(len(positive_query_pos)):
+            #     tmp = []
+            #     for j in range(len(positive_query_pos[i]) - 4, 1, -1):
+            #         tmp_r = []
+            #         tmp_k = []
+            #         for r in positive_query_pos[i][j]:
+            #             check = False
+            #             for k in positive_query_pos[i][j - 1]:
+            #                 if abs(r - k) <= slide_window:
+            #                     tmp_r.append(r)
+            #                     tmp_k.append(k)
+            #                     check = True
+            #                 elif check:
+            #                     break
+            #         positive_query_pos[i][j] = list(set(tmp_r))
+            #         positive_query_pos[i][j - 1] = list(set(tmp_k))
+            #
+            # final_pos = []
+            # for i in positive_query_pos:
+            #     check = True
+            #     for j in i[1:]:
+            #         if len(j) == 0:
+            #             check = False
+            #             break
+            #     if check:
+            #         final_pos.append(i)
+            #
+            # for i in final_pos:
+            #     text = i[-1]
+            #     neg = []
+            #     if len(query_term_neg_2) > 0:
+            #         for j in query_term_neg_2:
+            #             for k in re.finditer(j, text):
+            #                 neg.append(int(k.start()))
+            #     if len(wildcard_neg) > 0:
+            #         for w_neg in wildcard_neg:
+            #             for k in re.finditer(w_neg[0], text):
+            #                 for j in re.finditer(w_neg[1], text):
+            #                     if 1 <= (int(j.start()) - int(k.end())) <= w_neg[2]:
+            #                         neg.append(int(k.start()))
+            #
+            #     tmp = []
+            #     for r in range(len(i) - 4, 0, -1):
+            #         tmp.append(i[r])
+            #
+            #     restrict = []
+            #     for n in neg:
+            #         if n - 100 < 0:
+            #             for res in range(0, n + 101):
+            #                 restrict.append(res)
+            #         else:
+            #             for res in range(n - 100, n + 101):
+            #                 restrict.append(res)
+            #
+            #     restrict = list(set(restrict))
+            #     counter = -1
+            #     path = []
+            #     for r in tmp:
+            #         counter += 1
+            #         path.append([])
+            #         for k in r:
+            #             if k not in restrict:
+            #                 path[counter].append(k)
+            #
+            #     check = True
+            #     for j in path:
+            #         if not j:
+            #             check = False
+            #             break
+            #
+            #     if check:
+            #         final_result.append(i[-2])
+            #         glo_counter += 1
+            #         print(glo_counter, i[-3])
+            #         # print(neg)
+            #         # print(path)
+            #
+            # if len(final_result) > 0:
+            #     while True:
+            #         ask = input('想看那些原始文章(編號): ')
+            #
+            #         if ask == '':
+            #             break
+            #         else:
+            #             ask = ask.split()
+            #             for i in ask:
+            #                 if int(i) > len(final_result):
+            #                     print('編號錯誤，請重新輸入。')
+            #                     break
+            #                 print(getArticles(final_result[int(i) - 1]))
+            # else:
+            #     print('沒有符合條件的結果。')
 
 
 if __name__ == '__main__':
