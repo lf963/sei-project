@@ -14,6 +14,7 @@ import csv
 import re
 
 
+
 def load_data():
     wiki = []
     with open('/Users/garylai/Desktop/wiki2.csv', newline = '') as csvfile:
@@ -24,70 +25,8 @@ def load_data():
     wiki_dict = dict((wi[0], wi[1:]) for wi in wiki)
     return wiki_dict
         
-def input_word():
-    print('請輸入欲搜尋的字詞')
-    check_word = input('Enter your input:')
-    return check_word
-
-def input_window():
-    print('請輸入欲限制的出現字數')
-    window_length = input('Enter your input:')
-    window_length = int(window_length)
-    return window_length
-
-def in_out_list(check_word):
-    all_list = []
-    in_list = []
-    out_list = []
-    if check_word[0] == '+' or check_word[0] == '-':
-        add = [m.start() for m in re.finditer('\+',check_word)]
-        mi = [m.start() for m in re.finditer('\-',check_word)]
-        all_ = mi+add
-        all_.sort()
-        for i in range(len(all_)-1):
-            all_list.append(check_word[all_[i]+1:all_[i+1]].split()[0])
-        all_list.append(check_word[all_[-1]+1:].split()[0])
-        for i in add:
-            in_list.append(all_list[all_.index(i)])
-        for i in mi:
-            out_list.append(all_list[all_.index(i)])
-    else:
-        add = [m.start() for m in re.finditer('\+',check_word)]
-        mi = [m.start() for m in re.finditer('\-',check_word)]
-        all_ = mi+add
-        all_.sort()
-        in_list.append(check_word[0:all_[0]].split()[0])
-        for i in range(len(all_)-1):
-            all_list.append(check_word[all_[i]+1:all_[i+1]].split()[0])
-        all_list.append(check_word[all_[-1]+1:].split()[0])
-        for i in add:
-            in_list.append(all_list[all_.index(i)])
-        for i in mi:
-            out_list.append(all_list[all_.index(i)])
-        
-    for i in range(len(in_list)):
-        if in_list[i][0] == '(':
-            in_list[i] = list(filter(None, re.split('\W+', in_list[0])))
-            
-    for i in range(len(out_list)):
-        if out_list[i][0] == '(':
-            out_list[i] = list(filter(None, re.split('\W+', out_list[0])))
-            
-            
-            
-    return in_list, out_list
-        
     
-def search_word(in_list):
-    is_doc = [x for x in range(len(wiki))]
-    for check in range(len(in_list)):
-        is_true = []
-        for i in is_doc:
-            if in_list[check] in wiki[i][3]:
-                is_true.append(i)
-        is_doc = is_true    
-    return is_doc
-
+    
 
 def sliding_window(data, size, stepsize=1, padded=False, axis=-1, copy=True):
 
@@ -123,6 +62,8 @@ def sliding_window(data, size, stepsize=1, padded=False, axis=-1, copy=True):
     else:
         return strided
 
+    
+    
             
 def processing(length, is_doc, in_list, out_list):
     get_docs = []
