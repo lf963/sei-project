@@ -1,5 +1,7 @@
+import and_or_output
 import custom_exception as ex
 import re
+import search_wildcard
 import sys
 
 def parse(key_words):
@@ -39,10 +41,10 @@ def is_balance_parentheses(s):
             my_stack.append(ch)
         elif ch == ')':
             if len(my_stack) == 0:
-                raise ex.BalanceParenthesesException("Parentheses are not balanced")
+                raise ex.MyException("Parentheses are not balanced")
             my_stack.pop()
     if len(my_stack) != 0:
-        raise ex.BalanceParenthesesException("Parentheses are not balanced")
+        raise ex.MyException("Parentheses are not balanced")
 
 
 def is_valid_operator(s):
@@ -55,13 +57,13 @@ def is_valid_operator(s):
         if end == -1:
             break
         if s[start+1:end] != "&" and s[start+1:end] != "|":
-            raise ex.OperatorException("Operator should be & or |, cannot be %s" %s[start+1:end])
+            raise ex.MyException("Operator should be & or |, cannot be %s" %s[start+1:end])
         start = end
 
 
 def is_positive_window_size(size):
-    if size < 1:
-        raise ex.NegativeWindowSizException("Window size should be larger than zero")
+    if int(size) < 1:
+        raise ex.MyException("Window size should be a positive integer")
 
 
 def is_valid_window_size(window_size, rule_list):
@@ -72,67 +74,95 @@ def is_valid_window_size(window_size, rule_list):
         for j, ch in enumerate(rule):
             if ch == '+' or ch == '-':
                 if j - i > int(window_size):
-                    raise ex.WindowTooSmallException("Window size should be larger than all of your searched words")
+                    raise ex.MyException("Window size should be larger than all of your searched words")
                 i = j + 1
         if len(rule[i:]) > int(window_size):
-            raise ex.WindowTooSmallException("Window size should be larger than all of your searched words")
+            raise ex.MyException("Window size should be larger than all of your searched words")
 
 
 def has_parentheses(s):
     start = s.find("(")
     if start == -1:
-        raise ex.HasParenthesesException("Cannot find parentheses")
+        raise ex.MyException("Cannot find parentheses")
 
     for i, ch in enumerate(s):
         if ch == '&' or ch == '|':
             if s[i-1] != ")" or s[i+1] != "(":
-                raise ex.HasParenthesesException("Missing parentheses near %s" % s[i:i+2])
+                raise ex.MyException("Missing parentheses near %s" % s[i:i+2])
 
+def input_is_not_empty(key_words):
+    if len(key_words) == 0:
+        raise ex.MyException("Input cannot be empty")
 
 def parse_main():
     print("What you want to search:")
     rule = input()
     key_words = re.sub('[\s]', '', rule)  # remove white space
+    try:
+        input_is_not_empty(key_words)
+    except ex.MyException as err:
+        sys.exit(err)
 
     if key_words.find(",") == -1:   # if user didn't define window size, set it as -1
         window_size = -1
         content = key_words
     else:
         try:
-            is_positive_window_size(int(key_words.split(",")[0]))   # window size should be positive
-        except ex.NegativeWindowSizException as err:
+            print(key_words.split(",")[0])
+            is_positive_window_size(key_words.split(",")[0])   # window size should be positive integer
+        except ex.MyException as err:
             sys.exit(err)
         content = key_words.split(",")[1]
         window_size = key_words.split(",")[0]
 
     try:
         is_balance_parentheses(content)   # parentheses should be balanced
-    except ex.BalanceParenthesesException as err:
+    except ex.MyException as err:
         sys.exit(err)
 
     try:
         is_valid_operator(content)  # operator should be & or |
-    except ex.OperatorException as err:
+    except ex.MyException as err:
         sys.exit(err)
 
     try:
         has_parentheses(content)  # every word should be inside parentheses
-    except ex.HasParenthesesException as err:
+    except ex.MyException as err:
         sys.exit(err)
 
     word_result, operator_result = parse(content)
 
     try:
         is_valid_window_size(window_size, word_result)  # windows size should be larger than every word
-    except ex.WindowTooSmallException as err:
+    except ex.MyException as err:
         sys.exit(err)
 
     return window_size, word_result, operator_result
 
 
+
+
+
 if __name__ == '__main__':
     window_size, rule_list, operator_list = parse_main()
-    print("----------------------------------------------------")
-    print(window_size)
+
+    print("Call parse_input.py")
+    print("Window size = %s" % window_size)
     print(rule_list)
     print(operator_list)
+    print("----------------------------------------------------")
+    print("call search_wildcard.py")
+    final_result = search_wildcard.step_1(window_size, rule_list)
+
+    if window_size != -1:
+        print("Go to 冠宇's code")
+    else:
+        for result in final_result:
+            result.sort()
+        for result in final_result:
+            print(result)
+        print("----------------------------------------------------")
+        print("call and_or_output.py")
+        and_or_output.and_or(final_result, operator_list)
+
+
