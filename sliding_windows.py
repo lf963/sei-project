@@ -303,6 +303,7 @@ def main():
         title, doc_index = get_doc(processing(length, is_doc, in_list, out_list))
         search_answer.append(doc_index)
     print(time.time()-t0)
+    return search_answer
     
 
 if __name__ == '__main__':
