@@ -58,7 +58,7 @@ def sliding_window(data, size, stepsize=1, padded=False, axis=-1, copy=True):
         return strided
 
             
-def processing(length, is_doc, in_list, out_list):
+def processing(length, is_doc, in_list, out_list, wiki):
     get_docs = []
     run = 0
     for doc in is_doc:
@@ -137,14 +137,14 @@ def processing(length, is_doc, in_list, out_list):
     return get_docs 
 
 
-def get_doc(is_doc):
+def get_doc(is_doc, wiki):
     title = []
     for i in is_doc:
         title.append(wiki[3][i])
     return title, is_doc
 
 
-def main(input_processing):
+def main(input_processing, wiki):
     t0 = time.time()
     search_answer = []
     for searching in input_processing:
@@ -152,11 +152,12 @@ def main(input_processing):
         is_doc = searching[1]
         in_list = searching[2]
         out_list = searching[3]
-        title, doc_index = get_doc(processing(length, is_doc, in_list, out_list))
+        title, doc_index = get_doc(processing(length, is_doc, in_list, out_list, wiki), wiki)
         search_answer.append(doc_index)
     print(time.time()-t0)
     return search_answer
     
 
 if __name__ == '__main__':
-    main(input_processing)
+    wiki = load_data()
+    main(input_processing,wiki)
