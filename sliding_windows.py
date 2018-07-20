@@ -12,21 +12,16 @@ import numpy as np
 import time       
 import csv
 import re
+import pandas as pd
+import os
 
 
 
 def load_data():
-    wiki = []
-    with open('/Users/garylai/Desktop/wiki2.csv', newline = '') as csvfile:
-        reader = csv.reader(csvfile, delimiter=',')
-        for row in reader:
-            print(row)
-            wiki.append(row)
-    wiki_dict = dict((wi[0], wi[1:]) for wi in wiki)
-    return wiki_dict
-        
-    
-    
+    file_path = os.path.join(os.getcwd(),'wiki2.csv')
+    wiki = pd.read_csv(file_path, header = None, index_col = 0)
+    return wiki
+
 
 def sliding_window(data, size, stepsize=1, padded=False, axis=-1, copy=True):
 
@@ -62,8 +57,6 @@ def sliding_window(data, size, stepsize=1, padded=False, axis=-1, copy=True):
     else:
         return strided
 
-    
-    
             
 def processing(length, is_doc, in_list, out_list):
     get_docs = []
@@ -72,13 +65,12 @@ def processing(length, is_doc, in_list, out_list):
         print(run)
         slide_in_list = []
         slide_out_list = []
-        doc = str(doc)
         for check in in_list:
             if type(check) == str:
-                slide_in_list.append([m.start() for m in re.finditer(check,wiki[doc][2])])
+                slide_in_list.append([m.start() for m in re.finditer(check,wiki[3][doc])])
             else:
-                f_word = [m.start() for m in re.finditer(check[0],wiki[doc][2])]
-                s_word = [m.start() for m in re.finditer(check[1],wiki[doc][2])]
+                f_word = [m.start() for m in re.finditer(check[0],wiki[3][doc])]
+                s_word = [m.start() for m in re.finditer(check[1],wiki[3][doc])]
                 c_word = []
                 
                 for i in f_word:
@@ -89,10 +81,10 @@ def processing(length, is_doc, in_list, out_list):
                 
         for check in out_list:
             if type(check) == str:
-                slide_out_list.append([m.start() for m in re.finditer(check,wiki[doc][2])])
+                slide_out_list.append([m.start() for m in re.finditer(check,wiki[3][doc])])
             else:
-                f_word = [m.start() for m in re.finditer(check[0],wiki[doc][2])]
-                s_word = [m.start() for m in re.finditer(check[1],wiki[doc][2])]
+                f_word = [m.start() for m in re.finditer(check[0],wiki[3][doc])]
+                s_word = [m.start() for m in re.finditer(check[1],wiki[3][doc])]
                 c_word = []
                 for i in f_word:
                     for j in s_word:
@@ -144,16 +136,15 @@ def processing(length, is_doc, in_list, out_list):
         run+=1
     return get_docs 
 
-        
 
 def get_doc(is_doc):
     title = []
     for i in is_doc:
-        title.append(wiki[i][2])
+        title.append(wiki[3][i])
     return title, is_doc
 
 
-def main():
+def main(input_processing):
     t0 = time.time()
     search_answer = []
     for searching in input_processing:
@@ -168,4 +159,4 @@ def main():
     
 
 if __name__ == '__main__':
-    main()
+    main(input_processing)
