@@ -148,7 +148,7 @@ def main(input_processing, wiki):
     t0 = time.time()
     search_answer = []
     for searching in input_processing:
-        length = searching[0]
+        length = int(searching[0])
         is_doc = searching[1]
         in_list = searching[2]
         out_list = searching[3]
