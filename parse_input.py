@@ -117,15 +117,7 @@ def parse_main():
 
     try:
         is_balance_parentheses(content)   # parentheses should be balanced
-    except ex.MyException as err:
-        sys.exit(err)
-
-    try:
         is_valid_operator(content)  # operator should be & or |
-    except ex.MyException as err:
-        sys.exit(err)
-
-    try:
         has_parentheses(content)  # every word should be inside parentheses
     except ex.MyException as err:
         sys.exit(err)
