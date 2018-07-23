@@ -161,7 +161,9 @@ if __name__ == '__main__':
     # Sort our result just because it is convenient for us to debug
     for result in final_result:
         result.sort()
-    for result in final_result:
+    for rule, result in zip(rule_list, final_result):
+        print("--------------------------------------")
+        print(rule + " article id:")
         print(result)
 
     print("----------------------------------------------------")
