@@ -114,7 +114,6 @@ def parse_main():
         content = key_words
     else:
         try:
-            print(key_words.split(",")[0])
             is_positive_window_size(key_words.split(",")[0])   # window size should be positive integer
         except ex.MyException as err:
             sys.exit(err)
@@ -163,7 +162,7 @@ if __name__ == '__main__':
         result.sort()
     for rule, result in zip(rule_list, final_result):
         print("--------------------------------------")
-        print(rule + " article id:")
+        print(rule + " has %d articles: " % len(result))
         print(result)
 
     print("----------------------------------------------------")
