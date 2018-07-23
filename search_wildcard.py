@@ -1,3 +1,4 @@
+import re
 import sqlite3
 import datetime
 import urllib.request
@@ -32,136 +33,112 @@ def getArticles(url):
     return simple2tradition(text)
 
 
+def split_pos_neg(query_term):
+    positive = []
+    negative = []
+    for i in range(len(query_term)):
+        if '-' in query_term[i]:
+            query_term[i] = query_term[i].split('-')
+
+    for i in query_term:
+        if type(i) == str and len(i) > 0:
+            positive.append(i)
+        else:
+            for j in range(len(i)):
+                if len(i[j]) == 0:
+                    pass
+                elif j == 0:
+                    positive.append(i[j])
+                else:
+                    negative.append(i[j])
+    return positive, negative
+
+
+def get_wildcard(raw_query, extension=0):
+    query_term = []
+    query_term_2 = []
+    wildcard = []
+    for i in raw_query:
+        if '#@' in i:
+            start = i.index('#@')
+            end = i.index('@#')
+            query_term.append(i[:start])
+            query_term.append(i[end + 2:])
+            wildcard.append([i[:start], i[end + 2:], int(i[start + 2:end])])
+        else:
+            query_term_2.append(i)
+            query_term.append(i)
+
+    if extension:
+        return query_term, query_term_2, wildcard
+    else:
+        return query_term, wildcard
+
+
+def create_sql_query(query_term):
+    sql_query = ""
+    for i in query_term:
+        if i == query_term[-1]:
+            sql_query += "text LIKE '%" + i + "%'"
+        else:
+            sql_query += "text LIKE '%" + i + "%' AND "
+    return sql_query
+
+
+def get_result(sql_query, cursor, wildcard):
+    result = []
+    if sql_query != '':
+        raw_result = cursor.execute("SELECT * FROM Source WHERE " + sql_query)
+
+        if len(wildcard) == 0:
+            for i in raw_result:
+                result.append(i)
+        else:
+            for i in raw_result:
+                check = True
+                for j in wildcard:
+                    tmp_check = False
+                    for k in re.finditer(j[0], i[3]):
+                        tmp_first_end = int(k.end())
+                        for r in re.finditer(j[1], i[3]):
+                            tmp_second_start = int(r.start())
+                            if 1 <= (tmp_second_start - tmp_first_end) <= j[2]:
+                                tmp_check = True
+                                break
+                        if tmp_check:
+                            break
+                    if not tmp_check:
+                        check = False
+                        break
+                if check:
+                    result.append(i)
+    return result
+
+
 def step_1(slide_window, query_list):
+    slide_window = int(slide_window)
     final_output = []
 
     con = sqlite3.connect('News.sqlite')
 
     cur = con.cursor()
-
+    start_ts = datetime.datetime.now()
     for query in query_list:
-        # while True:
-        #     try:
-        #         slide_window = int(input('字數: '))
-        #         break
-        #     except:
-        #         print('輸入錯誤，請重新輸入', end='')
-        #
-        # if slide_window == '':
-        #     slide_window = -1
-        # query = input('請輸入搜查關鍵字: ')
-        # if query == '':
-        #     print('Terminate.')
-        #     break
-
         query_term = query.split('+')
+        #搜尋整篇文章
         if slide_window == -1:
-            positive = []
-            negative = []
-            for i in range(len(query_term)):
-                if '-' in query_term[i]:
-                    query_term[i] = query_term[i].split('-')
+            #將要與不要的字個別取出
+            positive, negative = split_pos_neg(query_term)
 
-            for i in query_term:
-                if type(i) == str and len(i) > 0:
-                    positive.append(i)
-                else:
-                    for j in range(len(i)):
-                        if len(i[j]) == 0:
-                            pass
-                        elif j == 0:
-                            positive.append(i[j])
-                        else:
-                            negative.append(i[j])
+            query_term_pos, wildcard_pos = get_wildcard(positive)
+            query_term_neg, wildcard_neg = get_wildcard(negative)
 
-            query_term_pos = []
-            query_term_neg = []
-            wildcard_pos = []
-            wildcard_neg = []
-            for i in positive:
-                if '#@' in i:
-                    start = i.index('#@')
-                    end = i.index('@#')
-                    query_term_pos.append(i[:start])
-                    query_term_pos.append(i[end + 2:])
-                    wildcard_pos.append([i[:start], i[end + 2:], int(i[start + 2:end])])
+            sql_query_pos = create_sql_query(query_term_pos)
+            sql_query_neg = create_sql_query(query_term_neg)
 
-                else:
-                    query_term_pos.append(i)
-            for i in negative:
-                if '#@' in i:
-                    start = i.index('#@')
-                    end = i.index('@#')
-                    query_term_neg.append(i[:start])
-                    query_term_neg.append(i[end + 2:])
-                    wildcard_neg.append([i[:start], i[end + 2:], int(i[start + 2:end])])
-                else:
-                    query_term_neg.append(i)
+            result_pos = get_result(sql_query_pos, cur, wildcard_pos)
+            result_neg = get_result(sql_query_neg, cur, wildcard_neg)
 
-            start_ts = datetime.datetime.now()
-
-            sql_query = ""
-            for i in query_term_pos:
-                if i == query_term_pos[-1]:
-                    sql_query += "text LIKE '%" + i + "%'"
-                else:
-                    sql_query += "text LIKE '%" + i + "%' AND "
-            result_pos = []
-            if sql_query != '':
-                raw_result = cur.execute("SELECT * FROM Source WHERE " + sql_query)
-
-                if len(wildcard_pos) == 0:
-                    for i in raw_result:
-                        result_pos.append(i)
-                else:
-                    for i in raw_result:
-                        check = True
-                        for j in wildcard_pos:
-                            tmp_check = False
-                            for k in re.finditer(j[0], i[3]):
-                                tmp_first_end = int(k.end())
-                                for r in re.finditer(j[1], i[3]):
-                                    tmp_second_start = int(r.start())
-                                    if 1 <= (tmp_second_start - tmp_first_end) <= j[2]:
-                                        tmp_check = True
-                                        break
-                                if tmp_check:
-                                    break
-                            if not tmp_check:
-                                check = False
-                                break
-                        if check:
-                            result_pos.append(i)
-
-            sql_query = ""
-            for i in query_term_neg:
-                if i == query_term_neg[-1]:
-                    sql_query += "text LIKE '%" + i + "%'"
-                else:
-                    sql_query += "text LIKE '%" + i + "%' AND "
-            result_neg = []
-            if sql_query != '':
-                raw_result = cur.execute("SELECT * FROM Source WHERE " + sql_query)
-
-                if len(wildcard_neg) == 0:
-                    for i in raw_result:
-                        result_neg.append(i)
-                else:
-                    for i in raw_result:
-                        check = False
-                        for j in wildcard_neg:
-                            for k in re.finditer(j[0], i[3]):
-                                tmp_first_end = int(k.end())
-                                for r in re.finditer(j[1], i[3]):
-                                    tmp_second_start = int(r.start())
-                                    if tmp_second_start - tmp_first_end - 1 <= j[2]:
-                                        result_neg.append(i)
-                                        check = True
-                                        break
-                                if check:
-                                    break
-
-            spend_time = datetime.datetime.now() - start_ts
             index_pos = []
             index_neg = []
             for i in result_pos:
@@ -172,9 +149,11 @@ def step_1(slide_window, query_list):
             #輸出
             result = set(index_pos) - set(index_neg)
             final_output.append(list(result))
+            spend_time = datetime.datetime.now() - start_ts
+
             # for i in list(result):
-            #   for j in cur.execute("SELECT * FROM Source WHERE ﻿id = \'" + str(i) + '\''):
-            #       print(j[2], j[3])
+            #     for j in cur.execute("SELECT * FROM Source WHERE ﻿id = \'" + str(i) + '\''):
+            #         print(j[2], j[3])
             # final_result = []
             # counter = 0
             # for i in result_pos:
@@ -207,90 +186,21 @@ def step_1(slide_window, query_list):
         else:
             glo_counter = 0
             final_result = []
-            positive = []
-            negative = []
-            for i in range(len(query_term)):
-                if '-' in query_term[i]:
-                    query_term[i] = query_term[i].split('-')
+            positive, negative = split_pos_neg(query_term)
 
-            for i in query_term:
-                if type(i) == str and len(i) > 0:
-                    positive.append(i)
-                else:
-                    for j in range(len(i)):
-                        if len(i[j]) == 0:
-                            pass
-                        elif j == 0:
-                            positive.append(i[j])
-                        else:
-                            negative.append(i[j])
+            query_term_pos, query_term_pos_2, wildcard_pos = get_wildcard(positive, 1)
+            query_term_neg, query_term_neg_2, wildcard_neg = get_wildcard(negative, 1)
 
-            query_term_pos_2 = []
-            query_term_pos = []
-            query_term_neg = []
-            query_term_neg_2 = []
-            wildcard_pos = []
-            wildcard_neg = []
-            for i in positive:
-                if '#@' in i:
-                    start = i.index('#@')
-                    end = i.index('@#')
-                    query_term_pos.append(i[:start])
-                    query_term_pos.append(i[end + 2:])
-                    wildcard_pos.append([i[:start], i[end + 2:], int(i[start + 2:end])])
-                else:
-                    query_term_pos_2.append(i)
-                    query_term_pos.append(i)
-
-            for i in negative:
-                if '#@' in i:
-                    start = i.index('#@')
-                    end = i.index('@#')
-                    query_term_neg.append(i[:start])
-                    query_term_neg.append(i[end + 2:])
-                    wildcard_neg.append([i[:start], i[end + 2:], int(i[start + 2:end])])
-                else:
-                    query_term_neg.append(i)
-                    query_term_neg_2.append(i)
-
-            sql_query = ""
-            for i in query_term_pos:
-                if i == query_term_pos[-1]:
-                    sql_query += "text LIKE '%" + i + "%'"
-                else:
-                    sql_query += "text LIKE '%" + i + "%' AND "
-            result_pos = []
-            if sql_query != '':
-                raw_result = cur.execute("SELECT * FROM Source WHERE " + sql_query)
-
-                if len(wildcard_pos) == 0:
-                    for i in raw_result:
-                        result_pos.append(i)
-                else:
-                    for i in raw_result:
-                        check = True
-                        for j in wildcard_pos:
-                            tmp_check = False
-                            for k in re.finditer(j[0], i[3]):
-                                tmp_first_end = int(k.end())
-                                for r in re.finditer(j[1], i[3]):
-                                    tmp_second_start = int(r.start())
-                                    if 1 <= (tmp_second_start - tmp_first_end) <= j[2]:
-                                        tmp_check = True
-                                        break
-                                if tmp_check:
-                                    break
-                            if not tmp_check:
-                                check = False
-                                break
-                        if check:
-                            result_pos.append(i)
+            sql_query = create_sql_query(query_term_pos)
+            result_pos = get_result(sql_query, cur, wildcard_pos)
 
             index_pos = []
             for i in result_pos:
                 index_pos.append(i[0])
             # 輸出給sliding window
             final_output.append([slide_window, sorted(list(set(index_pos))), wildcard_pos+query_term_pos_2, wildcard_neg+query_term_neg_2])
+            spend_time = datetime.datetime.now() - start_ts
+
             # positive_query_pos = []
             # for data in result_pos:
             #     positive_query_pos.append([data[0]])
@@ -316,14 +226,13 @@ def step_1(slide_window, query_list):
             #     positive_query_pos[-1].append(text)
             #
             # for i in range(len(positive_query_pos)):
-            #     tmp = []
             #     for j in range(len(positive_query_pos[i]) - 4, 1, -1):
             #         tmp_r = []
             #         tmp_k = []
             #         for r in positive_query_pos[i][j]:
             #             check = False
             #             for k in positive_query_pos[i][j - 1]:
-            #                 if abs(r - k) <= slide_window:
+            #                 if abs(r - k) <= int(slide_window):
             #                     tmp_r.append(r)
             #                     tmp_k.append(k)
             #                     check = True
@@ -363,10 +272,10 @@ def step_1(slide_window, query_list):
             #     restrict = []
             #     for n in neg:
             #         if n - 100 < 0:
-            #             for res in range(0, n + 101):
+            #             for res in range(0, n + slide_window + 1):
             #                 restrict.append(res)
             #         else:
-            #             for res in range(n - 100, n + 101):
+            #             for res in range(n - slide_window, n + slide_window + 1):
             #                 restrict.append(res)
             #
             #     restrict = list(set(restrict))
@@ -386,12 +295,13 @@ def step_1(slide_window, query_list):
             #             break
             #
             #     if check:
-            #         final_result.append(i[-2])
+            #         final_result.append(i[-2][i[-2].index('=') + 1:])
             #         glo_counter += 1
-            #         print(glo_counter, i[-3])
+            #         #print(glo_counter, i[-3])
             #         # print(neg)
             #         # print(path)
-            #
+            # print(final_result)
+
             # if len(final_result) > 0:
             #     while True:
             #         ask = input('想看那些原始文章(編號): ')
@@ -407,10 +317,14 @@ def step_1(slide_window, query_list):
             #                 print(getArticles(final_result[int(i) - 1]))
             # else:
             #     print('沒有符合條件的結果。')
+    print('done')
+    print(spend_time)
+
     return final_output
 
 
 if __name__ == '__main__':
-    slide = 20
-    query_list = ['中華職棒+游擊手', '陳#@1@#鋒-富邦#@10@#球隊+棒球-臺北', '台新銀行+王#@1@#民', '筆記型電腦+顯示卡', '很大的房子-很慢的車子', '臺積電']
-    print(step_1(slide, query_list))
+    slide = 30
+    query_input = ['職業+游擊手', '陳#@1@#鋒-富邦#@10@#球隊+棒球-臺北', '銀行+公司#@30@#董事長-元大-新光', '筆記型電腦+顯示卡', '很大的房子-很慢的車子', '臺積電']
+    # query_list = ['逐字稿']
+    print(step_1(slide, query_input))
