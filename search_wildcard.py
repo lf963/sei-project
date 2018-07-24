@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import re
 import sqlite3
 import datetime
@@ -7,15 +8,15 @@ import ssl
 from langconv import *
 
 
+
 def simple2tradition(line):
     line = Converter('zh-hant').convert(line)
     return line
 
 
-context = ssl._create_unverified_context()
-
+#crawling text from web
 def getArticles(url):
-    resp = urllib.request.urlopen(url, context=context, timeout=5).read().decode("utf-8")
+    resp = urllib.request.urlopen(url, context=ssl._create_unverified_context(), timeout=5).read().decode("utf-8")
     soup = BeautifulSoup(resp, "html.parser")
     listUrl = soup.findAll("p")
     text = ''
@@ -33,6 +34,7 @@ def getArticles(url):
     return simple2tradition(text)
 
 
+#split the raw query text into positive and negative terms
 def split_pos_neg(query_term):
     positive = []
     negative = []
@@ -54,6 +56,8 @@ def split_pos_neg(query_term):
     return positive, negative
 
 
+#realizing the wildcard's, [start word, last word, tolerable word number]
+#extension: 1(returning an additional item<query_term_2>
 def get_wildcard(raw_query, extension=0):
     query_term = []
     query_term_2 = []
@@ -79,16 +83,17 @@ def create_sql_query(query_term):
     sql_query = ""
     for i in query_term:
         if i == query_term[-1]:
-            sql_query += "text LIKE '%" + i + "%'"
+            sql_query += "text LIKE '%" + i.replace("'", "''").lower() + "%'"
         else:
-            sql_query += "text LIKE '%" + i + "%' AND "
+            sql_query += "text LIKE '%" + i.replace("'", "''").lower() + "%' AND "
     return sql_query
 
 
+#get the result which is/are the index(es) that those articles who satisfies the query condition
 def get_result(sql_query, cursor, wildcard):
     result = []
     if sql_query != '':
-        raw_result = cursor.execute("SELECT * FROM Source WHERE " + sql_query)
+        raw_result = cursor.execute('SELECT * FROM wiki WHERE ' + sql_query)
 
         if len(wildcard) == 0:
             for i in raw_result:
@@ -125,9 +130,7 @@ def step_1(slide_window, query_list):
     start_ts = datetime.datetime.now()
     for query in query_list:
         query_term = query.split('+')
-        #搜尋整篇文章
         if slide_window == -1:
-            #將要與不要的字個別取出
             positive, negative = split_pos_neg(query_term)
 
             query_term_pos, wildcard_pos = get_wildcard(positive)
@@ -141,18 +144,17 @@ def step_1(slide_window, query_list):
 
             index_pos = []
             index_neg = []
-            for i in result_pos:
-                index_pos.append(i[0])
+            for index in result_pos:
+                index_pos.append(index[0])
             for i in result_neg:
-                index_neg.append(i[0])
+                index_neg.append(index[0])
 
-            #輸出
             result = set(index_pos) - set(index_neg)
             final_output.append(list(result))
             spend_time = datetime.datetime.now() - start_ts
 
             # for i in list(result):
-            #     for j in cur.execute("SELECT * FROM Source WHERE ﻿id = \'" + str(i) + '\''):
+            #     for j in cur.execute("SELECT * FROM wiki WHERE ﻿id = \'" + str(i) + '\''):
             #         print(j[2], j[3])
             # final_result = []
             # counter = 0
@@ -195,9 +197,9 @@ def step_1(slide_window, query_list):
             result_pos = get_result(sql_query, cur, wildcard_pos)
 
             index_pos = []
-            for i in result_pos:
-                index_pos.append(i[0])
-            # 輸出給sliding window
+            for index in result_pos:
+                index_pos.append(index[0])
+
             final_output.append([slide_window, sorted(list(set(index_pos))), wildcard_pos+query_term_pos_2, wildcard_neg+query_term_neg_2])
             spend_time = datetime.datetime.now() - start_ts
 
@@ -326,5 +328,5 @@ def step_1(slide_window, query_list):
 if __name__ == '__main__':
     slide = 30
     query_input = ['職業+游擊手', '陳#@1@#鋒-富邦#@10@#球隊+棒球-臺北', '銀行+公司#@30@#董事長-元大-新光', '筆記型電腦+顯示卡', '很大的房子-很慢的車子', '臺積電']
-    # query_list = ['逐字稿']
+
     print(step_1(slide, query_input))
