@@ -67,10 +67,10 @@ def processing(length, is_doc, in_list, out_list, wiki):
         slide_out_list = []
         for check in in_list:
             if type(check) == str:
-                slide_in_list.append([m.start() for m in re.finditer(check.lower(),wiki['text'][doc].lower()])
+                slide_in_list.append([m.start() for m in re.finditer(check.lower(),wiki['text'][doc].lower())])
             else:
-                f_word = [m.start() for m in re.finditer(check[0].lower(,wiki['text'][doc].lower()]
-                s_word = [m.start() for m in re.finditer(check[1].lower(,wiki['text'][doc].lower()]
+                f_word = [m.start() for m in re.finditer(check[0].lower(),wiki['text'][doc].lower())]
+                s_word = [m.start() for m in re.finditer(check[1].lower(),wiki['text'][doc].lower())]
                 c_word = []
                 
                 for i in f_word:
@@ -81,10 +81,10 @@ def processing(length, is_doc, in_list, out_list, wiki):
                 
         for check in out_list:
             if type(check) == str:
-                slide_out_list.append([m.start() for m in re.finditer(check.lower(,wiki['text'][doc].lower()])
+                slide_out_list.append([m.start() for m in re.finditer(check.lower(),wiki['text'][doc].lower()])
             else:
-                f_word = [m.start() for m in re.finditer(check[0].lower(,wiki['text'][doc].lower()]
-                s_word = [m.start() for m in re.finditer(check[1].lower(,wiki['text'][doc].lower()]
+                f_word = [m.start() for m in re.finditer(check[0].lower(),wiki['text'][doc].lower())]
+                s_word = [m.start() for m in re.finditer(check[1].lower(),wiki['text'][doc].lower())]
                 c_word = []
                 for i in f_word:
                     for j in s_word:
