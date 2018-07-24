@@ -14,13 +14,13 @@ import csv
 import re
 import pandas as pd
 import os
+import sqlite3
 
 
 
 def load_data():
-    file_path = os.path.join(os.getcwd(),'wiki2.csv')
-    wiki = pd.read_csv(file_path, header = None, index_col = 0)
-    return wiki
+    return pd.read_sql('SELECT * FROM wiki', con=sqlite3.connect('/Users/garylai/Desktop/News.sqlite'), index_col='id')
+       
 
 
 def sliding_window(data, size, stepsize=1, padded=False, axis=-1, copy=True):
