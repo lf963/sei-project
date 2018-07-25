@@ -149,7 +149,8 @@ def and_or(article_id_list, operator_list):
 
     print_result(result_id.id_list)
     dot.view()
-    return dot
+
+    return dot, node_prefix + str(node_index + 1), result_id.id_list
 
 
 if __name__ == '__main__':
