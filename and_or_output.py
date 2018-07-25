@@ -48,7 +48,7 @@ def print_result(search_result):
     batch_num = int(len(search_result) / batch_size) + 1
 
     if len(search_result) != 0:
-        conn = sqlite3.connect(os.path.join(os.getcwd(), 'articles', 'wiki.db'))
+        conn = sqlite3.connect(os.path.join(os.getcwd(),  'News.sqlite'))
         for i in range(0, batch_num):
             cur = conn.cursor()
             sql = "SELECT id, url, title FROM wiki WHERE "
@@ -148,8 +148,8 @@ def and_or(article_id_list, operator_list):
     result_id = article_id_stack.pop()
 
     print_result(result_id.id_list)
-    dot.view()
-
+    #dot.view()
+    print(dot)
     return dot, node_prefix + str(node_index + 1), result_id.id_list
 
 
