@@ -161,7 +161,7 @@ if __name__ == '__main__':
                         print(result)
                     print("----------------------------------------------------")
                     print("call and_or_output.py")
-                dot = and_or_output.and_or(final_result, operator_list)
-                produce_graph_upper.draw(window_size, rule, rule_list, graph_result, final_result, dot)
+                dot, last_node, result = and_or_output.and_or(final_result, operator_list)
+                produce_graph_upper.draw(window_size, rule, rule_list, graph_result, final_result, dot, last_node, result)
 
 
