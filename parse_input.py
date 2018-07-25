@@ -2,9 +2,9 @@ import and_or_output
 import custom_exception as ex
 import re
 import search_wildcard
-import sliding_windows
 import sys
-
+import sliding_windows
+import produce_graph_upper
 
 def parse(key_words):
     word_result = []
@@ -37,17 +37,16 @@ def parse(key_words):
 
 
 def is_balance_parentheses(s):
-    error_msg = "Parentheses are not balanced"
     my_stack = []
     for ch in s:
         if ch == '(':
             my_stack.append(ch)
         elif ch == ')':
             if len(my_stack) == 0:
-                raise ex.MyException(error_msg)
+                raise ex.MyException("Parentheses are not balanced")
             my_stack.pop()
     if len(my_stack) != 0:
-        raise ex.MyException(error_msg)
+        raise ex.MyException("Parentheses are not balanced")
 
 
 def is_valid_operator(s):
@@ -70,7 +69,6 @@ def is_positive_window_size(size):
 
 
 def is_valid_window_size(window_size, rule_list):
-    error_msg = "Window size should be larger than all of your searched words"
     if window_size == -1:
         return
     for rule in rule_list:
@@ -78,10 +76,10 @@ def is_valid_window_size(window_size, rule_list):
         for j, ch in enumerate(rule):
             if ch == '+' or ch == '-':
                 if j - i > int(window_size):
-                    raise ex.MyException(error_msg)
+                    raise ex.MyException("Window size should be larger than all of your searched words")
                 i = j + 1
         if len(rule[i:]) > int(window_size):
-            raise ex.MyException(error_msg)
+            raise ex.MyException("Window size should be larger than all of your searched words")
 
 
 def has_parentheses(s):
@@ -94,11 +92,9 @@ def has_parentheses(s):
             if s[i-1] != ")" or s[i+1] != "(":
                 raise ex.MyException("Missing parentheses near %s" % s[i:i+2])
 
-
 def input_is_not_empty(key_words):
     if len(key_words) == 0:
         raise ex.MyException("Input cannot be empty")
-
 
 def parse_main():
     print("What you want to search:")
@@ -114,6 +110,7 @@ def parse_main():
         content = key_words
     else:
         try:
+            print(key_words.split(",")[0])
             is_positive_window_size(key_words.split(",")[0])   # window size should be positive integer
         except ex.MyException as err:
             sys.exit(err)
@@ -134,37 +131,37 @@ def parse_main():
     except ex.MyException as err:
         sys.exit(err)
 
-    return window_size, word_result, operator_result
+    return window_size, word_result, operator_result, rule
 
 
 if __name__ == '__main__':
     print("sliding_windows.load_data()..................")
     wiki = sliding_windows.load_data()
+    while True:
+        #三次錯誤機會
+        for i in range(3, 0, -1):
 
-    window_size, rule_list, operator_list = parse_main()
+                window_size, rule_list, operator_list, rule = parse_main()
 
-    print("Call parse_input.py")
-    print("Window size = %s" % window_size)
-    print(rule_list)
-    print(operator_list)
+                print("Call parse_input.py")
+                print("Window size = %s" % window_size)
+                print(rule_list)
+                print(operator_list)
+                print("----------------------------------------------------")
+                print("call search_wildcard.py")
+                final_result, graph_result = search_wildcard.step_1(window_size, rule_list)
 
-    print("----------------------------------------------------")
-    print("Call search_wildcard.py")
-    final_result = search_wildcard.step_1(window_size, rule_list)
+                if int(window_size) != -1:  # window size is not -1, go to sliding_windows.py
+                    print("sliding_windows.main()..............")
+                    final_result = sliding_windows.main(final_result, wiki)
+                else:  # window size is -1, do and/or operation and print
+                    for result in final_result:
+                        result.sort()
+                    for result in final_result:
+                        print(result)
+                    print("----------------------------------------------------")
+                    print("call and_or_output.py")
+                dot = and_or_output.and_or(final_result, operator_list)
+                produce_graph_upper.draw(window_size, rule, rule_list, graph_result, final_result, dot)
 
-    if int(window_size) != -1:   # window size is not -1, go to sliding_windows.py
-        print("----------------------------------------------------")
-        print("Call sliding_windows.main()..............")
-        final_result = sliding_windows.main(final_result, wiki)
 
-    # Sort our result just because it is convenient for us to debug
-    for result in final_result:
-        result.sort()
-    for rule, result in zip(rule_list, final_result):
-        print("--------------------------------------")
-        print(rule + " has %d articles: " % len(result))
-        print(result)
-
-    print("----------------------------------------------------")
-    print("Call and_or_output.py")
-    and_or_output.and_or(final_result, operator_list)

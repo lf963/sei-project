@@ -83,9 +83,9 @@ def create_sql_query(query_term):
     sql_query = ""
     for i in query_term:
         if i == query_term[-1]:
-            sql_query += "text LIKE '%" + i.replace("'", "''").lower() + "%'"
+            sql_query += "lower(text) LIKE '%" + i.replace("'", "''").lower() + "%'"
         else:
-            sql_query += "text LIKE '%" + i.replace("'", "''").lower() + "%' AND "
+            sql_query += "lower(text) LIKE '%" + i.replace("'", "''").lower() + "%' AND "
     return sql_query
 
 
@@ -103,19 +103,19 @@ def get_result(sql_query, cursor, wildcard):
                 check = True
                 for j in wildcard:
                     tmp_check = False
-                    for k in re.finditer(j[0], i[3]):
-                        tmp_first_end = int(k.end())
-                        for r in re.finditer(j[1], i[3]):
-                            tmp_second_start = int(r.start())
-                            if 1 <= (tmp_second_start - tmp_first_end) <= j[2]:
-                                tmp_check = True
+                    for k in re.finditer(j[0].lower(), i[3].lower()):
+                        first_term_end = int(k.end())
+                        for r in re.finditer(j[1].lower(), i[3].lower()):
+                            second_term_start = int(r.start())
+                            if 1 <= (second_term_start - first_term_end) <= j[2]:
+                                tmp_check = True   #找到一個符合就跳出第一個迴圈
                                 break
-                        if tmp_check:
+                        if tmp_check:     #跳出第二個迴圈
                             break
-                    if not tmp_check:
+                    if not tmp_check:     #如果任何一個wildcard不符合，則該篇文章不符合，跳出
                         check = False
                         break
-                if check:
+                if check:     #符合所有條件則輸出
                     result.append(i)
     return result
 
@@ -123,6 +123,7 @@ def get_result(sql_query, cursor, wildcard):
 def step_1(slide_window, query_list):
     slide_window = int(slide_window)
     final_output = []
+    graph_output = []
 
     con = sqlite3.connect('News.sqlite')
 
@@ -142,17 +143,14 @@ def step_1(slide_window, query_list):
             result_pos = get_result(sql_query_pos, cur, wildcard_pos)
             result_neg = get_result(sql_query_neg, cur, wildcard_neg)
 
-            index_pos = []
-            index_neg = []
-            for index in result_pos:
-                index_pos.append(index[0])
-            for i in result_neg:
-                index_neg.append(index[0])
+            index_pos = [index[0] for index in result_pos]
+            index_neg = [index[0] for index in result_neg]
 
             result = set(index_pos) - set(index_neg)
+
             final_output.append(list(result))
             spend_time = datetime.datetime.now() - start_ts
-
+            graph_output.append(list(result))
             # for i in list(result):
             #     for j in cur.execute("SELECT * FROM wiki WHERE ﻿id = \'" + str(i) + '\''):
             #         print(j[2], j[3])
@@ -196,9 +194,7 @@ def step_1(slide_window, query_list):
             sql_query = create_sql_query(query_term_pos)
             result_pos = get_result(sql_query, cur, wildcard_pos)
 
-            index_pos = []
-            for index in result_pos:
-                index_pos.append(index[0])
+            index_pos = [index[0] for index in result_pos]
 
             final_output.append([slide_window, sorted(list(set(index_pos))), wildcard_pos+query_term_pos_2, wildcard_neg+query_term_neg_2])
             spend_time = datetime.datetime.now() - start_ts
@@ -319,10 +315,11 @@ def step_1(slide_window, query_list):
             #                 print(getArticles(final_result[int(i) - 1]))
             # else:
             #     print('沒有符合條件的結果。')
+            graph_output.append(sorted(list(set(index_pos))))
     print('done')
     print(spend_time)
 
-    return final_output
+    return final_output, graph_output
 
 
 if __name__ == '__main__':
