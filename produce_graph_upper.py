@@ -3,8 +3,8 @@ import sqlite3
 from graphviz import Digraph
 
 
-def create_sql_query(query_term):
-    query_term = sorted(query_term)[:10]
+def create_sql_query(query_term, limit=10):
+    query_term = sorted(query_term)[:limit]
     sql_query = ''
     for i in query_term:
         if i == query_term[-1]:
@@ -14,19 +14,22 @@ def create_sql_query(query_term):
     return sql_query
 
 
-def list2str(raw_list):
+def list2str(raw_list, limit=10):
     tmp = ''
     count = 0
     for index in raw_list:
         count += 1
-        if count == 10:
+        if count == limit:
             tmp += str(index) + '...'
             break
+        elif count % 10 == 0:
+            tmp += str(index) + '\n'
         elif index == raw_list[-1]:
             tmp += str(index)
         else:
             tmp += str(index) + ', '
-
+    if not tmp:
+        tmp += 'None'
     return tmp
 
 
@@ -36,9 +39,8 @@ def do_query(sql_query):
     return cur.execute("SELECT title FROM wiki WHERE " + sql_query)
 
 
-def draw(slide_window, raw_query, query_list, raw_index, slide_index, rrr):
-
-    dot = Digraph('G')
+def draw(slide_window, raw_query, query_list, raw_index, slide_index, dot, last_node, result):
+    # dot = Digraph('G')
     # dot.attr(compound='true')
     # dot.graph_attr['rankdir'] = 'LR'
     dot.node_attr['shape'] = 'box3d'
@@ -83,17 +85,24 @@ def draw(slide_window, raw_query, query_list, raw_index, slide_index, rrr):
         last = 'third'
     else:
         last = 'second'
-    print(dot)
+
+    for i in range(len_of_query_list):
+        dot.edge(last + str(i + 1), 'last' + str(i + 1), color='green')
+
+    sql_query = create_sql_query(result, 50)
+    if result:
+        title_list = []
+        for title in do_query(sql_query):
+            title_list.append(list(title)[0])
+    result = list2str(sorted(title_list), 50)
+    dot.node(result, shape='house')
+    dot.edge(last_node, result, color='turquoise')
+
     dot.view()
 
 
 if __name__ == '__main__':
     slide = 1
-    a = '100, (周杰倫#@30@#女友)|(男友#@30@#周杰倫)'
-    b = ['周杰倫#@30@#女友', '男友#@30@#周杰倫', 'a', 'b', 'c', 'd']
-    # c = [[1098743, 5076512], []]
-    # d = [[1098743, 5076512], []]
-    d = [[13]] * 6
-    c = [[13], [18, 13, 21], [22, 25, 13, 39, 30], [1098743, 45, 13, 62], [13, 21, 22, 25, 39, 1098743, 70], [20, 62, 21, 13, 18, 1098743], [70, 1098743, 45]]
-    e = [[1098743, 70, '&', [13]], [45, [13], '&', [13]], [62, [13], '&', [13]], [13, 18, '&', [1098743, 13, 21]], [21, [1098743, 13, 21], '&', [1098743]], [[1098743], [13], '|', [1098743, 13]], [1098743, 13]]
-    draw(slide,a,b,c,d,e)
+
+    aaa = '100, (可口+雪碧)&(黑松-七喜)|(OSX+android)&(steve#@20@#jobs+cook)|(臺積電-Systex#@20@#精誠)'
+    bbb = '(apple)&(nvidia)&(cuda)|(顯示卡)&(amd)'
