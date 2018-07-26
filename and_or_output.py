@@ -78,6 +78,11 @@ def or_operation(list1, list2):
 
 def and_or(article_id_list, operator_list):
     dot = Digraph('G')
+
+    # set font as 新細明體(PmingLiu)
+    # without setting this, windows cannot print Chinese
+    dot.node_attr['fontname'] = "PmingLiu"
+
     os.environ["PATH"] += os.path.join(os.pathsep, os.getcwd(), 'graphviz-2.38', 'bin')
 
     article_id_stack = []
@@ -98,7 +103,7 @@ def and_or(article_id_list, operator_list):
             article_id_stack.append(IdNode(article_id_list[article_id_index], article_id_index + 1))
 
             # Create a node,
-            s.node(node_prefix + str(article_id_index + 1), cur_article_id_str)
+            s.node(node_prefix + str(article_id_index + 1), cur_article_id_str + "你好")
 
             if operator_index >= len(operator_list):
                 break
@@ -148,12 +153,17 @@ def and_or(article_id_list, operator_list):
     result_id = article_id_stack.pop()
 
     print_result(result_id.id_list)
-    #dot.view()
-    print(dot)
-    return dot, node_prefix + str(node_index + 1), result_id.id_list
+    # print(dot)
+    # dot.view()
+
+
+    # dot: the graph
+    # node_prefix + str(node_index + 1 if node_index != -1 else 1): the name of the last node
+    # if we have only one node, the name of that node is node_prefix + str(1)
+    return dot, node_prefix + str(node_index + 1 if node_index != -1 else 1), result_id.id_list
 
 
 if __name__ == '__main__':
-    index_list = [[1,2,3],[2,3,4],[7,8,9],[9,10,11],[22]]
-    operator_list = ['&', '|','&','|']
+    index_list = [[1,2,3]]
+    operator_list = []
     and_or(index_list, operator_list)
