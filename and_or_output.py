@@ -100,7 +100,7 @@ def and_or(article_id_list, operator_list):
         s.attr(rank='same')
 
         while article_id_index < len(article_id_list):
-            cur_article_id_str = produce_graph_upper.list2str(article_id_list[article_id_index])
+            cur_article_id_str = produce_graph_upper.list2str(article_id_list[article_id_index], 10, len(article_id_list))
             article_id_stack.append(IdNode(article_id_list[article_id_index], article_id_index + 1))
 
             # Create a node,
@@ -120,7 +120,7 @@ def and_or(article_id_list, operator_list):
                 article_id_stack.append(IdNode(cur_result, node_index))
 
                 # Create a node
-                dot.node(node_prefix + str(node_index), produce_graph_upper.list2str(sorted(cur_result)))
+                dot.node(node_prefix + str(node_index), produce_graph_upper.list2str(sorted(cur_result), 10, len(article_id_list)))
 
                 # Connect node
                 dot.edge(node_prefix + str(cur_article_node1.index), node_prefix + str(node_index),
@@ -143,7 +143,7 @@ def and_or(article_id_list, operator_list):
             result = and_or_operation(cur_article_node1.id_list, cur_article_node2.id_list, cur_operator)
             article_id_stack.append(IdNode(result, node_index))
             # Create a node
-            dot.node(node_prefix + str(node_index), produce_graph_upper.list2str(sorted(result)))
+            dot.node(node_prefix + str(node_index), produce_graph_upper.list2str(sorted(result), 10, len(article_id_list)))
             dot.edge(node_prefix + str(cur_article_node1.index), node_prefix + str(node_index),
                      color=OperationColor.OR.value if cur_operator == '|' else OperationColor.AND.value)
             dot.edge(node_prefix + str(cur_article_node2.index), node_prefix + str(node_index),

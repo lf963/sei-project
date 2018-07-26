@@ -14,7 +14,7 @@ def create_sql_query(query_term, limit=10):
     return sql_query
 
 
-def list2str(raw_list, limit=10):
+def list2str(raw_list, limit=10, length=2):
     tmp = ''
     count = 0
     for index in raw_list:
@@ -22,7 +22,7 @@ def list2str(raw_list, limit=10):
         if count == limit:
             tmp += str(index) + '...'
             break
-        elif count % 10 == 0:
+        elif count % (10 // length * 2) == 0:
             tmp += str(index) + '\n'
         elif index == raw_list[-1]:
             tmp += str(index)
@@ -43,10 +43,17 @@ def draw(slide_window, raw_query, query_list, raw_index, slide_index, dot, last_
     # dot = Digraph('G')
     # dot.attr(compound='true')
     # dot.graph_attr['rankdir'] = 'LR'
-    dot.node_attr['shape'] = 'box3d'
+    dot.graph_attr['bgcolor'] = '/accent3/1:/accent3/3'
+    dot.graph_attr['label'] = 'RESULT!!!'
+    dot.graph_attr['labelloc'] = 't'
+    dot.graph_attr['fontsize'] = '40'
+    dot.graph_attr['labeljust'] = 'l'
+    dot.graph_attr['fontcolor'] = 'red'
+    dot.node_attr['shape'] = 'note'
+    # dot.node_attr['shape'] = 'record'
     len_of_query_list = len(query_list)
     count = 0
-    dot.node('0', raw_query)
+    dot.node('0', raw_query, shape='folder')
 
     for i in range(len_of_query_list):
         count += 1
@@ -55,9 +62,9 @@ def draw(slide_window, raw_query, query_list, raw_index, slide_index, dot, last_
             title_list = []
             for title in do_query(sql_query):
                 title_list.append(list(title)[0])
-
-            dot.node('first' + str(count), query_list[i])
-            dot.node('second' + str(count), list2str(title_list))
+            
+            dot.node('first' + str(count), query_list[i], shape='tab')
+            dot.node('second' + str(count), list2str(title_list, 10, len_of_query_list))
             dot.edge('0', 'first' + str(count))
             dot.edge('first' + str(count), 'second' + str(count))
         else:
@@ -75,7 +82,7 @@ def draw(slide_window, raw_query, query_list, raw_index, slide_index, dot, last_
                 title_list = []
                 for title in do_query(sql_query):
                     title_list.append(list(title)[0])
-                dot.node('third' + str(count), list2str(title_list))
+                dot.node('third' + str(count), list2str(title_list, 10, len_of_query_list))
                 dot.edge('second' + str(count), 'third' + str(count))
             else:
                 dot.node('third' + str(count), 'None')
@@ -95,8 +102,9 @@ def draw(slide_window, raw_query, query_list, raw_index, slide_index, dot, last_
         for title in do_query(sql_query):
             title_list.append(list(title)[0])
     result = list2str(sorted(title_list), 50)
-    dot.node(result, shape='house')
+    dot.node(result, shape='box3d', fontcolor='red', fontsize='20')
     dot.edge(last_node, result, color='turquoise')
+    dot.graph_attr['dpi'] = '300'
 
     dot.view()
 
