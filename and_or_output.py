@@ -2,6 +2,7 @@ from enum import Enum
 from graphviz import Digraph
 import os
 import sqlite3
+import produce_graph_upper
 
 
 # This is for edges in graph
@@ -83,6 +84,8 @@ def and_or(article_id_list, operator_list):
     # without setting this, windows cannot print Chinese
     dot.node_attr['fontname'] = "PmingLiu"
 
+    # os.environ["PATH"] += os.path.join(os.pathsep, os.getcwd(), 'graphviz-2.38', 'bin')
+
     article_id_stack = []
     operator_stack = []
     article_id_index = 0
@@ -97,7 +100,7 @@ def and_or(article_id_list, operator_list):
         s.attr(rank='same')
 
         while article_id_index < len(article_id_list):
-            cur_article_id_str = list2str(article_id_list[article_id_index])
+            cur_article_id_str = produce_graph_upper.list2str(article_id_list[article_id_index])
             article_id_stack.append(IdNode(article_id_list[article_id_index], article_id_index + 1))
 
             # Create a node,
@@ -117,7 +120,7 @@ def and_or(article_id_list, operator_list):
                 article_id_stack.append(IdNode(cur_result, node_index))
 
                 # Create a node
-                dot.node(node_prefix + str(node_index), list2str(cur_result))
+                dot.node(node_prefix + str(node_index), produce_graph_upper.list2str(sorted(cur_result)))
 
                 # Connect node
                 dot.edge(node_prefix + str(cur_article_node1.index), node_prefix + str(node_index),
@@ -131,16 +134,16 @@ def and_or(article_id_list, operator_list):
                 operator_stack.append(operator_list[operator_index])
             operator_index += 1
             article_id_index += 1
-
+        
         while len(operator_stack) > 0:
             cur_article_node1 = article_id_stack.pop()
             cur_article_node2 = article_id_stack.pop()
             cur_operator = operator_stack.pop()
-
+            
             result = and_or_operation(cur_article_node1.id_list, cur_article_node2.id_list, cur_operator)
             article_id_stack.append(IdNode(result, node_index))
             # Create a node
-            dot.node(node_prefix + str(node_index), list2str(result))
+            dot.node(node_prefix + str(node_index), produce_graph_upper.list2str(sorted(result)))
             dot.edge(node_prefix + str(cur_article_node1.index), node_prefix + str(node_index),
                      color=OperationColor.OR.value if cur_operator == '|' else OperationColor.AND.value)
             dot.edge(node_prefix + str(cur_article_node2.index), node_prefix + str(node_index),
@@ -152,16 +155,17 @@ def and_or(article_id_list, operator_list):
 
     print_result(result_id.id_list)
     # print(dot)
-    #dot.view()
+    # dot.view()
 
 
     # dot: the graph
     # node_prefix + str(node_index + 1 if node_index != -1 else 1): the name of the last node
     # if we have only one node, the name of that node is node_prefix + str(1)
+
     return dot, node_prefix + str(node_index + 1 if node_index != -1 else 1), result_id.id_list
 
 
 if __name__ == '__main__':
-    index_list = [[17,24,33,57],[123,56489,6516]]
-    operator_list = ['|']
+    index_list = [[1,2,3]]
+    operator_list = []
     and_or(index_list, operator_list)
