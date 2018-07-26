@@ -152,7 +152,7 @@ def and_or(article_id_list, operator_list):
 
     print_result(result_id.id_list)
     # print(dot)
-    dot.view()
+    #dot.view()
 
 
     # dot: the graph
