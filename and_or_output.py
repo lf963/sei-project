@@ -83,8 +83,6 @@ def and_or(article_id_list, operator_list):
     # without setting this, windows cannot print Chinese
     dot.node_attr['fontname'] = "PmingLiu"
 
-    os.environ["PATH"] += os.path.join(os.pathsep, os.getcwd(), 'graphviz-2.38', 'bin')
-
     article_id_stack = []
     operator_stack = []
     article_id_index = 0
@@ -103,7 +101,7 @@ def and_or(article_id_list, operator_list):
             article_id_stack.append(IdNode(article_id_list[article_id_index], article_id_index + 1))
 
             # Create a node,
-            s.node(node_prefix + str(article_id_index + 1), cur_article_id_str + "你好")
+            s.node(node_prefix + str(article_id_index + 1), cur_article_id_str)
 
             if operator_index >= len(operator_list):
                 break
@@ -154,7 +152,7 @@ def and_or(article_id_list, operator_list):
 
     print_result(result_id.id_list)
     # print(dot)
-    # dot.view()
+    dot.view()
 
 
     # dot: the graph
@@ -164,6 +162,6 @@ def and_or(article_id_list, operator_list):
 
 
 if __name__ == '__main__':
-    index_list = [[1,2,3]]
-    operator_list = []
+    index_list = [[17,24,33,57],[123,56489,6516]]
+    operator_list = ['|']
     and_or(index_list, operator_list)
