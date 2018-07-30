@@ -84,8 +84,6 @@ def and_or(article_id_list, operator_list):
     # without setting this, windows cannot print Chinese
     dot.node_attr['fontname'] = "PmingLiu"
 
-    # os.environ["PATH"] += os.path.join(os.pathsep, os.getcwd(), 'graphviz-2.38', 'bin')
-
     article_id_stack = []
     operator_stack = []
     article_id_index = 0
@@ -167,6 +165,11 @@ def and_or(article_id_list, operator_list):
         c.edge('dummy_node_1', 'AND', color=OperationColor.AND.value)
         c.edge('dummy_node_2', 'OR', color=OperationColor.OR.value)
 
+    with dot.subgraph(name='cluster_dummy') as c:
+        c.graph_attr['style'] = 'invis'
+        c.node_attr['style'] = 'invis'
+        c.node("dummy_node_3", "")
+    dot.edge("dummy_node_3", "dummy_node_1",ltail="cluster_dummy", lhead="cluster_legend", style="invis")
 
     # print(dot)
     #dot.view()
