@@ -149,8 +149,11 @@ if __name__ == '__main__':
                 print(operator_list)
                 print("----------------------------------------------------")
                 print("call search_wildcard.py")
-                final_result, graph_result = search_wildcard.step_1(window_size, rule_list)
-
+                if window_size == -1:
+                    final_result, graph_result, sentence = search_wildcard.step_1(window_size, rule_list)
+                else:
+                    final_result, graph_result = search_wildcard.step_1(window_size, rule_list)
+                    
                 if int(window_size) != -1:  # window size is not -1, go to sliding_windows.py
                     print("sliding_windows.main()..............")
                     final_result = sliding_windows.main(final_result, wiki)
@@ -164,4 +167,4 @@ if __name__ == '__main__':
                 dot, last_node, result = and_or_output.and_or(final_result, operator_list)
                 produce_graph_upper.draw(window_size, rule, rule_list, graph_result, final_result, dot, last_node, result)
 
-
+                # print(sentence)

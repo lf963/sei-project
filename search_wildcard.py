@@ -53,7 +53,28 @@ def split_pos_neg(query_term):
                     positive.append(i[j])
                 else:
                     negative.append(i[j])
+    print(positive, negative)
     return positive, negative
+
+def get_sentence(dot_position, start, end, tmp_sentence, text):
+    dot_position.append(start)
+    dot_position.append(end)
+    dot_position.sort()
+    if start != dot_position[0] and end != dot_position[-1]:
+        tmp_sentence.append(
+            text[dot_position[dot_position.index(start) - 1] + 1:dot_position[dot_position.index(end) + 1] + 1])
+    else:
+        if start == 0:
+            try:
+                tmp_sentence.append(text[:dot_position[dot_position.index(end) + 1] + 1])
+            except:
+                tmp_sentence.append(text)
+        else:
+            tmp_sentence.append(text[dot_position[dot_position.index(start) - 1] + 1:])
+
+    dot_position.remove(start)
+    dot_position.remove(end)
+    return tmp_sentence
 
 
 #realizing the wildcard's, [start word, last word, tolerable word number]
@@ -90,34 +111,67 @@ def create_sql_query(query_term):
 
 
 #get the result which is/are the index(es) that those articles who satisfies the query condition
-def get_result(sql_query, cursor, wildcard):
+def get_result(sql_query, cursor, all_query, part_query, wildcard, pos_neg, sentence):
     result = []
     if sql_query != '':
         raw_result = cursor.execute('SELECT * FROM wiki WHERE ' + sql_query)
 
         if len(wildcard) == 0:
             for i in raw_result:
+                tmp_sentence = []
+                dot_position = [-1]
+                for pos in re.finditer('。', i[3]):
+                    dot_position.append(pos.start())
+                for j in all_query:
+                    for k in re.finditer(j, i[3]):
+                        if pos_neg == '+':
+                            tmp_sentence = get_sentence(dot_position, k.start(), k.end(), tmp_sentence, i[3])
                 result.append(i)
+                if pos_neg == '+':
+                    try:
+                        sentence[str(i[0])] += tmp_sentence
+                    except:
+                        sentence[str(i[0])] = tmp_sentence
+                    sentence[str(i[0])] = list(set(sentence[str(i[0])]))
         else:
             for i in raw_result:
+                tmp_sentence = []
+                dot_position = [-1]
+                for pos in re.finditer('。', i[3]):
+                    dot_position.append(pos.start())
                 check = True
                 for j in wildcard:
                     tmp_check = False
                     for k in re.finditer(j[0].lower(), i[3].lower()):
-                        first_term_end = int(k.end())
                         for r in re.finditer(j[1].lower(), i[3].lower()):
-                            second_term_start = int(r.start())
-                            if 1 <= (second_term_start - first_term_end) <= j[2]:
-                                tmp_check = True   #找到一個符合就跳出第一個迴圈
-                                break
-                        if tmp_check:     #跳出第二個迴圈
-                            break
+
+                            if 1 <= (r.start() - k.end()) <= j[2]:
+                                tmp_check = True
+                                if pos_neg == '+':
+                                    tmp_sentence = get_sentence(dot_position, k.start(), r.end(), tmp_sentence, i[3])
+                                else:
+                                    break
+                        # if tmp_check:     #跳出第二個迴圈
+                        #     break
                     if not tmp_check:     #如果任何一個wildcard不符合，則該篇文章不符合，跳出
                         check = False
                         break
                 if check:     #符合所有條件則輸出
+                    #將不是wildcard的位置放入
+                    if pos_neg == '+':
+                        for word in part_query:
+                            for k in re.finditer(word, i[3]):
+                                tmp_sentence = get_sentence(dot_position, k.start(), k.end(), tmp_sentence, i[3])
+                        try:
+                            sentence[str(i[0])] += tmp_sentence
+                        except:
+                            sentence[str(i[0])] = tmp_sentence
+                        sentence[str(i[0])] = list(set(sentence[str(i[0])]))
                     result.append(i)
-    return result
+    if pos_neg == '+':
+        return result, sentence
+    else:
+        return result
 
 
 def step_1(slide_window, query_list):
@@ -129,19 +183,20 @@ def step_1(slide_window, query_list):
 
     cur = con.cursor()
     start_ts = datetime.datetime.now()
+    sentence = dict()
     for query in query_list:
         query_term = query.split('+')
         if slide_window == -1:
             positive, negative = split_pos_neg(query_term)
 
-            query_term_pos, wildcard_pos = get_wildcard(positive)
-            query_term_neg, wildcard_neg = get_wildcard(negative)
+            query_term_pos, query_term_pos_2, wildcard_pos = get_wildcard(positive, 1)
+            query_term_neg, query_term_neg_2, wildcard_neg = get_wildcard(negative, 1)
 
             sql_query_pos = create_sql_query(query_term_pos)
             sql_query_neg = create_sql_query(query_term_neg)
 
-            result_pos = get_result(sql_query_pos, cur, wildcard_pos)
-            result_neg = get_result(sql_query_neg, cur, wildcard_neg)
+            result_pos, sentence = get_result(sql_query_pos, cur, positive, query_term_pos_2, wildcard_pos, '+', sentence)
+            result_neg = get_result(sql_query_neg, cur, negative, query_term_neg_2, wildcard_neg, '-', sentence)
 
             index_pos = [index[0] for index in result_pos]
             index_neg = [index[0] for index in result_neg]
@@ -192,7 +247,7 @@ def step_1(slide_window, query_list):
             query_term_neg, query_term_neg_2, wildcard_neg = get_wildcard(negative, 1)
 
             sql_query = create_sql_query(query_term_pos)
-            result_pos = get_result(sql_query, cur, wildcard_pos)
+            result_pos, sentence = get_result(sql_query, cur, positive, query_term_pos_2, wildcard_pos, '+', sentence)
 
             index_pos = [index[0] for index in result_pos]
 
@@ -316,14 +371,16 @@ def step_1(slide_window, query_list):
             # else:
             #     print('沒有符合條件的結果。')
             graph_output.append(sorted(list(set(index_pos))))
+
     print('done')
     print(spend_time)
-
-    return final_output, graph_output
-
+    if slide_window == -1:
+        return final_output, graph_output, sentence
+    else:
+        return final_output, graph_output
 
 if __name__ == '__main__':
-    slide = 30
+    slide = -1
     query_input = ['職業+游擊手', '陳#@1@#鋒-富邦#@10@#球隊+棒球-臺北', '銀行+公司#@30@#董事長-元大-新光', '筆記型電腦+顯示卡', '很大的房子-很慢的車子', '臺積電']
-
+    # print(query_input[2])
     print(step_1(slide, query_input))
