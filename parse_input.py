@@ -138,33 +138,30 @@ if __name__ == '__main__':
     print("sliding_windows.load_data()..................")
     wiki = sliding_windows.load_data()
     while True:
-        #三次錯誤機會
-        for i in range(3, 0, -1):
+        window_size, rule_list, operator_list, rule = parse_main()
 
-                window_size, rule_list, operator_list, rule = parse_main()
+        print("Call parse_input.py")
+        print("Window size = %s" % window_size)
+        print(rule_list)
+        print(operator_list)
+        print("----------------------------------------------------")
+        print("call search_wildcard.py")
+        if window_size == -1:
+            final_result, graph_result, sentence = search_wildcard.step_1(window_size, rule_list)
+        else:
+            final_result, graph_result = search_wildcard.step_1(window_size, rule_list)
 
-                print("Call parse_input.py")
-                print("Window size = %s" % window_size)
-                print(rule_list)
-                print(operator_list)
-                print("----------------------------------------------------")
-                print("call search_wildcard.py")
-                if window_size == -1:
-                    final_result, graph_result, sentence = search_wildcard.step_1(window_size, rule_list)
-                else:
-                    final_result, graph_result = search_wildcard.step_1(window_size, rule_list)
-                    
-                if int(window_size) != -1:  # window size is not -1, go to sliding_windows.py
-                    print("sliding_windows.main()..............")
-                    final_result = sliding_windows.main(final_result, wiki)
-                else:  # window size is -1, do and/or operation and print
-                    for result in final_result:
-                        result.sort()
-                    for result in final_result:
-                        print(result)
-                    print("----------------------------------------------------")
-                    print("call and_or_output.py")
-                dot, last_node, result = and_or_output.and_or(final_result, operator_list)
-                produce_graph_upper.draw(window_size, rule, rule_list, graph_result, final_result, dot, last_node, result)
+        if int(window_size) != -1:  # window size is not -1, go to sliding_windows.py
+            print("sliding_windows.main()..............")
+            final_result = sliding_windows.main(final_result, wiki)
+        else:  # window size is -1, do and/or operation and print
+            for result in final_result:
+                result.sort()
+            for result in final_result:
+                print(result)
+            print("----------------------------------------------------")
+            print("call and_or_output.py")
+        dot, last_node, result = and_or_output.and_or(final_result, operator_list)
+        produce_graph_upper.draw(window_size, rule, rule_list, graph_result, final_result, dot, last_node, result)
 
-                # print(sentence)
+        print(sentence)
