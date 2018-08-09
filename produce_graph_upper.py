@@ -43,7 +43,7 @@ def draw(slide_window, raw_query, query_list, raw_index, slide_index, dot, last_
     # dot = Digraph('G')
     # dot.attr(compound='true')
     # dot.graph_attr['rankdir'] = 'LR'
-    dot.graph_attr['bgcolor'] = '/accent3/1:/accent3/3'
+    dot.graph_attr['bgcolor'] = 'mistyrose'
     dot.graph_attr['label'] = 'RESULT!!!'
     dot.graph_attr['labelloc'] = 't'
     dot.graph_attr['fontsize'] = '40'
@@ -54,7 +54,6 @@ def draw(slide_window, raw_query, query_list, raw_index, slide_index, dot, last_
     len_of_query_list = len(query_list)
     count = 0
     dot.node('0', raw_query, shape='folder')
-
     for i in range(len_of_query_list):
         count += 1
         if raw_index[i]:
@@ -95,15 +94,16 @@ def draw(slide_window, raw_query, query_list, raw_index, slide_index, dot, last_
 
     for i in range(len_of_query_list):
         dot.edge(last + str(i + 1), 'last' + str(i + 1), color='green')
-
+    print(result)
     sql_query = create_sql_query(result, 50)
+
+    title_list = []
     if result:
-        title_list = []
         for title in do_query(sql_query):
             title_list.append(list(title)[0])
-    result = list2str(sorted(title_list), 50)
-    dot.node(result, shape='box3d', fontcolor='red', fontsize='20')
-    dot.edge(last_node, result, color='turquoise')
+    result_1 = list2str(sorted(title_list), 50)
+    dot.node(result_1, result_1 + '\n總計結果: ' + str(len(result)) + '篇。', shape='box3d', fontcolor='red', fontsize='20')
+    dot.edge(last_node, result_1, color='turquoise')
     dot.graph_attr['dpi'] = '300'
 
     dot.view()
