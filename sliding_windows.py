@@ -57,12 +57,16 @@ def sliding_window(data, size, stepsize=1, padded=False, axis=-1, copy=True):
     else:
         return strided
 
+    
+
             
 def processing(length, is_doc, in_list, out_list, wiki):
     get_docs = []
+    get_all_sentence = []
     run = 0
     for doc in is_doc:
-        print(run)
+        get_sentence = []
+#        print(run)
         slide_in_list = []
         slide_out_list = []
         for check in in_list:
@@ -81,7 +85,7 @@ def processing(length, is_doc, in_list, out_list, wiki):
                 
         for check in out_list:
             if type(check) == str:
-                slide_out_list.append([m.start() for m in re.finditer(check.lower(),wiki['text'][doc].lower()])
+                slide_out_list.append([m.start() for m in re.finditer(check.lower(),wiki['text'][doc].lower())])
             else:
                 f_word = [m.start() for m in re.finditer(check[0].lower(),wiki['text'][doc].lower())]
                 s_word = [m.start() for m in re.finditer(check[1].lower(),wiki['text'][doc].lower())]
@@ -103,6 +107,8 @@ def processing(length, is_doc, in_list, out_list, wiki):
             pass
         elif (end-start <length) & (len([x for x in slide_out_list if x != []]) == 0):
             get_docs.append(doc)
+            get_sentence += [start]
+            get_all_sentence.append(get_sentence)
         else:
             slide_doc = np.zeros((len(in_list)+len(out_list),end-start+1), dtype = bool)
             
@@ -131,10 +137,37 @@ def processing(length, is_doc, in_list, out_list, wiki):
             entre = np.where(slide_doc_all.sum(axis=1) == min(slide_doc_all.sum(axis=1)))[0][0]
             for i in np.where(slide_doc_all[entre,:] == True)[0]:
                 if not(False in slide_doc_all[:,i]):
-                    get_docs.append(doc)
-                    break
+                    if doc not in get_docs:
+                        get_docs.append(doc)
+                    get_sentence += [i+start]
+            if len(get_sentence ) != 0:
+                get_all_sentence.append(get_sentence)
         run+=1
-    return get_docs 
+    return get_docs, get_all_sentence
+
+    
+def get_word_sentence(length, get_docs, get_all_sentence, wiki):
+    run = 0
+    get_position = []
+    for i in range(len(get_docs)):
+        word = get_all_sentence[i]
+        position = []
+        for j in range(len(word)-1):
+            if abs(word[j+1] - word[j]) >1:
+                position += [word[j]]
+        position += [word[len(word)-1]]
+        get_position.append(position)
+        
+    sentence = []
+    for i in range(len(get_docs)):
+        doc = get_docs[i]
+        doc_sentence=[]
+        for j in get_position[i]:
+            doc_sentence += [wiki['text'][doc][j:j+length]]
+        sentence.append(doc_sentence)
+    
+    return sentence
+                        
 
 
 def get_doc(is_doc, wiki):
@@ -152,10 +185,12 @@ def main(input_processing, wiki):
         is_doc = searching[1]
         in_list = searching[2]
         out_list = searching[3]
-        title, doc_index = get_doc(processing(length, is_doc, in_list, out_list, wiki), wiki)
+        get_docs, get_all_sentence = processing(length, is_doc, in_list, out_list, wiki)
+        title, doc_index = get_doc(processing(get_docs, wiki))
+        sentence = get_sord_sentence(length, get_docs, get_all_sentence, wiki)
         search_answer.append(doc_index)
     print(time.time()-t0)
-    return search_answer
+    return search_answer, sentence
     
 
 if __name__ == '__main__':
