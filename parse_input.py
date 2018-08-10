@@ -1,4 +1,4 @@
-import and_or_output
+import and_or_operation
 import custom_exception as ex
 import re
 import search_wildcard
@@ -160,8 +160,10 @@ if __name__ == '__main__':
             for result in final_result:
                 print(result)
             print("----------------------------------------------------")
-            print("call and_or_output.py")
-        dot, last_node, result = and_or_output.and_or(final_result, operator_list)
+            print("call and_or_operation.py")
+        dot, last_node, result = and_or_operation.and_or(final_result, operator_list)
         produce_graph_upper.draw(window_size, rule, rule_list, graph_result, final_result, dot, last_node, result)
 
-        print(sentence)
+        for key in sentence:
+            print(key)
+            print(sentence[key])
