@@ -239,7 +239,7 @@ def Search_command():
                     print(result)
                 print("----------------------------------------------------")
                 print("call and_or_output.py")
-        dot, last_node, result = and_or_output.and_or(final_result, operator_list)
+        dot, last_node, result = and_or_operation.and_or(final_result, operator_list)
         produce_graph_upper.draw(window_size, rule, rule_list, graph_result, final_result, dot, last_node, result)
         
     
