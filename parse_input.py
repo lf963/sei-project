@@ -96,9 +96,12 @@ def input_is_not_empty(key_words):
     if len(key_words) == 0:
         raise ex.MyException("Input cannot be empty")
 
-def parse_main(search):
+def parse_main(search=0):
     print("What you want to search:")
-    rule = search
+    if search == 0:
+        rule = input()
+    else:
+        rule = search
     key_words = re.sub('[\s]', '', rule)  # remove white space
     try:
         input_is_not_empty(key_words)
