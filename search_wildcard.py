@@ -129,10 +129,10 @@ def get_result(sql_query, cursor, all_query, part_query, wildcard, pos_neg, sent
                 result.append(i)
                 if pos_neg == '+':
                     try:
-                        sentence[str(i[0])] += tmp_sentence
+                        sentence[str(i[2])] += tmp_sentence
                     except:
-                        sentence[str(i[0])] = tmp_sentence
-                    sentence[str(i[0])] = list(set(sentence[str(i[0])]))
+                        sentence[str(i[2])] = tmp_sentence
+                    sentence[str(i[2])] = list(set(sentence[str(i[2])]))
         else:
             for i in raw_result:
                 tmp_sentence = []
@@ -163,10 +163,10 @@ def get_result(sql_query, cursor, all_query, part_query, wildcard, pos_neg, sent
                             for k in re.finditer(word, i[3]):
                                 tmp_sentence = get_sentence(dot_position, k.start(), k.end(), tmp_sentence, i[3])
                         try:
-                            sentence[str(i[0])] += tmp_sentence
+                            sentence[str(i[2])] += tmp_sentence
                         except:
-                            sentence[str(i[0])] = tmp_sentence
-                        sentence[str(i[0])] = list(set(sentence[str(i[0])]))
+                            sentence[str(i[2])] = tmp_sentence
+                        sentence[str(i[2])] = list(set(sentence[str(i[2])]))
                     result.append(i)
     if pos_neg == '+':
         return result, sentence
