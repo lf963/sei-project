@@ -8,9 +8,6 @@ Created on Tue Jul 24 09:08:06 2018
 
 import tkinter as tk
 from tkinter import *
-from tkinter import ttk
-from PIL import Image, ImageTk, ImageSequence
-import multiprocessing as mp
 import and_or_operation
 import custom_exception as ex
 import search_wildcard
