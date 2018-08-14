@@ -19,7 +19,7 @@ import sqlite3
 
 
 def load_data():
-    return pd.read_sql('SELECT * FROM wiki', con=sqlite3.connect('/Users/garylai/Desktop/News.sqlite'), index_col='id')
+    return pd.read_sql('SELECT * FROM wiki', con=sqlite3.connect('News.sqlite'), index_col='id')
        
 
 
