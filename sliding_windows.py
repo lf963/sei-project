@@ -128,10 +128,14 @@ def processing(length, is_doc, in_list, out_list, wiki):
             
             k = len(in_list)
             l = len(out_list)
-            m = len(slide_doc[0])-length+1
+            m = len(slide_doc[0])
             
-            slide_doc_in = np.max(sliding_window(slide_doc[:len(in_list),:], size = length, stepsize=1),axis=2).reshape(k,m)
-            slide_doc_out = np.min(np.invert(sliding_window(slide_doc[len(in_list):,:], size = length, stepsize=1)),axis=2).reshape(l,m)
+            
+            pad_doc_in = np.pad(slide_doc[:len(in_list),:], ((0,0),(length-1,length-1)), 'constant', constant_values=(False, False))
+            pad_doc_out = np.pad(slide_doc[len(in_list):,:], ((0,0),(length+l-1,length+l-1)), 'constant', constant_values=(False, False))
+            
+            slide_doc_in = np.max(sliding_window(pad_doc_in, size = (2*length-1), stepsize=1),axis=2).reshape(k,m)
+            slide_doc_out = np.min(np.invert(sliding_window(pad_doc_out, size = (2*(length+l)-1), stepsize=1)),axis=2).reshape(l,m)
             slide_doc_all = np.concatenate((slide_doc_in, slide_doc_out), axis=0)
             
             entre = np.where(slide_doc_all.sum(axis=1) == min(slide_doc_all.sum(axis=1)))[0][0]
@@ -147,7 +151,6 @@ def processing(length, is_doc, in_list, out_list, wiki):
 
     
 def get_word_sentence(length, get_docs, get_all_sentence, wiki):
-    run = 0
     get_position = []
     for i in range(len(get_docs)):
         word = get_all_sentence[i]
@@ -158,13 +161,14 @@ def get_word_sentence(length, get_docs, get_all_sentence, wiki):
         position += [word[len(word)-1]]
         get_position.append(position)
         
-    sentence = []
+    sentence = {}
     for i in range(len(get_docs)):
         doc = get_docs[i]
         doc_sentence=[]
         for j in get_position[i]:
-            doc_sentence += [wiki['text'][doc][j:j+length]]
-        sentence.append(doc_sentence)
+            k = max(0,j-(2*length-1))
+            doc_sentence += [wiki['text'][doc][k:j+length]]
+        sentence[wiki['title'][doc]] = doc_sentence
     
     return sentence
                         
@@ -180,17 +184,18 @@ def get_doc(is_doc, wiki):
 def main(input_processing, wiki):
     t0 = time.time()
     search_answer = []
+    all_sentence = {}
     for searching in input_processing:
         length = int(searching[0])
         is_doc = searching[1]
         in_list = searching[2]
         out_list = searching[3]
         get_docs, get_all_sentence = processing(length, is_doc, in_list, out_list, wiki)
-        title, doc_index = get_doc(processing(get_docs, wiki))
-        sentence = get_sord_sentence(length, get_docs, get_all_sentence, wiki)
+        title, doc_index = get_doc(get_docs, wiki)
+        all_sentence.update(get_word_sentence(length, get_docs, get_all_sentence, wiki))
         search_answer.append(doc_index)
     print(time.time()-t0)
-    return search_answer, sentence
+    return search_answer, all_sentence
     
 
 if __name__ == '__main__':
