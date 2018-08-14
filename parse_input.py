@@ -6,6 +6,7 @@ import sys
 import sliding_windows
 import produce_graph_upper
 
+
 def parse(key_words):
     word_result = []
     operator_result = []
@@ -118,7 +119,7 @@ def parse_main(search=0):
         except ex.MyException as err:
             sys.exit(err)
         content = key_words.split(",")[1]
-        window_size = key_words.split(",")[0]
+        window_size = int(key_words.split(",")[0])
 
     try:
         is_balance_parentheses(content)   # parentheses should be balanced
@@ -138,7 +139,7 @@ def parse_main(search=0):
 
 
 if __name__ == '__main__':
-    print("sliding_windows.load_data()..................")
+    print("loding data..................")
     wiki = sliding_windows.load_data()
     while True:
         window_size, rule_list, operator_list, rule = parse_main()
@@ -153,20 +154,19 @@ if __name__ == '__main__':
             final_result, graph_result, sentence = search_wildcard.step_1(window_size, rule_list)
         else:
             final_result, graph_result = search_wildcard.step_1(window_size, rule_list)
-
-        if int(window_size) != -1:  # window size is not -1, go to sliding_windows.py
             print("sliding_windows.main()..............")
-            final_result = sliding_windows.main(final_result, wiki)
-        else:  # window size is -1, do and/or operation and print
-            for result in final_result:
-                result.sort()
-            for result in final_result:
-                print(result)
-            print("----------------------------------------------------")
-            print("call and_or_operation.py")
+            final_result, sentence = sliding_windows.main(final_result, wiki)
+
+        # else:  # window size is -1, do and/or operation and print
+        #     for result in final_result:
+        #         result.sort()
+        #     for result in final_result:
+        #         print(result)
+        #     print("----------------------------------------------------")
+        #     print("call and_or_operation.py")
         dot, last_node, result = and_or_operation.and_or(final_result, operator_list)
         produce_graph_upper.draw(window_size, rule, rule_list, graph_result, final_result, dot, last_node, result)
 
-        for key in sentence:
-            print(key)
-            print(sentence[key])
+        # for key in sentence:
+        #     print(key)
+        #     print(sentence[key])
