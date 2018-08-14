@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 """
 Created on Tue Jul 24 09:08:06 2018
-
 @author: garylai
 """
 
@@ -229,16 +228,9 @@ def Search_command():
             final_result, graph_result, sentence = search_wildcard.step_1(window_size, rule_list)
         else:
             final_result, graph_result = search_wildcard.step_1(window_size, rule_list)
-        if int(window_size) != -1:  # window size is not -1, go to sliding_windows.py
             print("sliding_windows.main()..............")
-            final_result ,sentence = sliding_windows.main(final_result, wiki)
-        else:  # window size is -1, do and/or operation and print
-            for result in final_result:
-                result.sort()
-                for result in final_result:
-                    print(result)
-                print("----------------------------------------------------")
-                print("call and_or_output.py")
+            final_result, sentence = sliding_windows.main(final_result, wiki)
+			
         dot, last_node, result = and_or_operation.and_or(final_result, operator_list)
         produce_graph_upper.draw(window_size, rule, rule_list, graph_result, final_result, dot, last_node, result)
         
@@ -303,5 +295,3 @@ Search_button = tk.Button(window, image = search_img,width = 38, height = 38,
 Search_button.place(x=880, y=25,anchor='nw')
 
 window.mainloop()
-
-
