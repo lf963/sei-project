@@ -11,7 +11,7 @@ from tkinter import *
 from tkinter import ttk
 from PIL import Image, ImageTk, ImageSequence
 import multiprocessing as mp
-import and_or_output
+import and_or_operation
 import custom_exception as ex
 import search_wildcard
 import sliding_windows
