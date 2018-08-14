@@ -157,13 +157,6 @@ if __name__ == '__main__':
             print("sliding_windows.main()..............")
             final_result, sentence = sliding_windows.main(final_result, wiki)
 
-        # else:  # window size is -1, do and/or operation and print
-        #     for result in final_result:
-        #         result.sort()
-        #     for result in final_result:
-        #         print(result)
-        #     print("----------------------------------------------------")
-        #     print("call and_or_operation.py")
         dot, last_node, result = and_or_operation.and_or(final_result, operator_list)
         produce_graph_upper.draw(window_size, rule, rule_list, graph_result, final_result, dot, last_node, result)
 
