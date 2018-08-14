@@ -43,7 +43,7 @@ def draw(slide_window, raw_query, query_list, raw_index, slide_index, dot, last_
     # dot = Digraph('G')
     # dot.attr(compound='true')
     # dot.graph_attr['rankdir'] = 'LR'
-    dot.graph_attr['bgcolor'] = 'mistyrose'
+    dot.graph_attr['bgcolor'] = '#f0f0f0'
     dot.graph_attr['label'] = 'RESULT!!!'
     dot.graph_attr['labelloc'] = 't'
     dot.graph_attr['fontsize'] = '40'
