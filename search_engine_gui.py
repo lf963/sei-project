@@ -19,7 +19,7 @@ import produce_graph_upper
 import parse_input
         
 print("sliding_windows.load_data()..................")
-#wiki = sliding_windows.load_data()
+wiki = sliding_windows.load_data()
 window = tk.Tk()
 window.title('關鍵字搜尋器')
 window.geometry('930x600')
