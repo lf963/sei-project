@@ -16,7 +16,7 @@ This search engine support the following searching methods:
 
 ## Prerequisites
 
-Iinstall Python.
+Install Python.
 
 ## Running
 
